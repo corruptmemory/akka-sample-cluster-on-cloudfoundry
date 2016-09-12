@@ -39,4 +39,3 @@ docker build -t cf -f Dockerfile-cf .
   b. https://docs.pivotal.io/pivotalcf/1-7/concepts/docker.html - How to use Docker images to run CF application
 
 4. Can we use CF somehow as sandox w/o going through AWS or another Cloud Provider route. Will it be considered as valid confirmation? 
-
