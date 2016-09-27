@@ -37,7 +37,9 @@ vagrant up
 ## Adding routes
 bin/add-route
 
-# Install CF (https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
+# Install CF 
+(https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
+
 ```cd .. # be at the same level as bosh-lite```
 ```git clone https://github.com/cloudfoundry/cf-release```
 ```./bin/provision_cf```
