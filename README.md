@@ -40,7 +40,7 @@ bin/add-route
 # Install CF 
 (https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
 
-```cd .. # be at the same level as bosh-lite```
+```cd ..``` # be at the same level as bosh-lite
 ```git clone https://github.com/cloudfoundry/cf-release```
 ```./bin/provision_cf```
 
@@ -53,7 +53,7 @@ bin/add-route
 ## spiff should be Darwin for Mac (https://github.com/cloudfoundry-incubator/spiff/releases)
 ```unzip spiff_darwin_amd64.zip```
 ```mkdir bin```
-```mv spiff binvi ~/.bash_profile` # add `pwd`/bin to PATH
+```mv spiff binvi ~/.bash_profile``` # add $pwd/bin to PATH
 ```source ~/.bash_profile```
 
 ## Here should be success
