@@ -1,6 +1,0 @@
-# Pull base image.
-FROM activator
-
-# Copying sources
-ADD akka-sample-cluster /akka-sample-cluster
-WORKDIR /akka-sample-cluster

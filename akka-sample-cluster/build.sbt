@@ -1,42 +1,42 @@
-import com.typesafe.sbt.SbtMultiJvm
-import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+val akkaV = "2.4.3"
+
+resolvers ++= Seq("Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/")
+
+val Frontend = config("frontend") extend(Compile)
+val Backend = config("backend") extend(Compile)
+def customAssemblySettings =
+  inConfig(Frontend)(baseAssemblySettings ++
+    inTask(assembly)(mainClass := Some("sample.cluster.factorial.FactorialFrontend")) ++
+    inTask(assembly)(assemblyJarName := "akka-sample-frontend.jar")) ++
+    inConfig(Backend)(baseAssemblySettings ++
+      inTask(assembly)(mainClass := Some("sample.cluster.factorial.FactorialBackend")) ++
+      inTask(assembly)(assemblyJarName := "akka-sample-backend.jar"))
 
 val project = Project(
   id = "akka-sample-cluster-scala",
   base = file("."),
-  settings = Defaults.coreDefaultSettings ++ SbtMultiJvm.multiJvmSettings ++ Seq(
+  settings = customAssemblySettings ++ Defaults.coreDefaultSettings ++ Seq(
     name := """akka-sample-cluster""",
-    version := "15v09p01",
+    scalaVersion := "2.11.8",
     // scalaVersion := provided by Typesafe Reactive Platform
     scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.6", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
     javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint:unchecked", "-Xlint:deprecation"),
     libraryDependencies ++= Seq(
-      TypesafeLibrary.akkaCluster.value,
-      TypesafeLibrary.akkaMultiNodeTestkit.value,
-      "com.typesafe.akka" %% "akka-contrib" % "2.3-bin-rp-15v09p01", // TODO eventually something like TypesafeLibary.beta.contrib ?
-      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-      "org.fusesource" % "sigar" % "1.6.4"),
+      "com.typesafe.akka" %% "akka-cluster" % akkaV,
+      "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaV,
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
+      "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaV,
+      "com.typesafe.akka" %% "akka-contrib" % akkaV,
+      "org.scalaj" %% "scalaj-http" % "2.3.0",
+      "com.typesafe.play" %% "play-json" % "2.3.4",
+      "org.scalatest" %% "scalatest" % "2.2.1" % "test"//,
+      /*"org.fusesource" % "sigar" % "1.6.4"*/),
     javaOptions in run ++= Seq(
-      "-Djava.library.path=./sigar",
+      //"-Djava.library.path=./sigar",
       "-Xms128m", "-Xmx1024m"),
     Keys.fork in run := true,  
     mainClass in (Compile, run) := Some("sample.cluster.simple.SimpleClusterApp"),
-    // make sure that MultiJvm test are compiled by the default test compilation
-    compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
-    // disable parallel tests
     parallelExecution in Test := false,
-    // make sure that MultiJvm tests are executed by the default test target, 
-    // and combine the results from ordinary test and multi-jvm tests
-    executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
-      case (testResults, multiNodeResults)  =>
-        val overall =
-          if (testResults.overall.id < multiNodeResults.overall.id)
-            multiNodeResults.overall
-          else
-            testResults.overall
-        Tests.Output(overall,
-          testResults.events ++ multiNodeResults.events,
-          testResults.summaries ++ multiNodeResults.summaries)
-    }
+    mainClass in assembly := Some("sample.cluster.factorial.FactorialApp")
   )
-) configs (MultiJvm)
+)

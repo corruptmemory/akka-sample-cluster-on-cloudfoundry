@@ -17,3 +17,11 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 *.sc
+*.tgz
+*.zip
+bosh-lite
+diego-release
+garden-runc-release
+cf-release
+netman-release
+bin

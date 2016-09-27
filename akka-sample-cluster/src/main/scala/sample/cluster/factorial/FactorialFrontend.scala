@@ -1,20 +1,31 @@
 package sample.cluster.factorial
 
-import scala.concurrent.duration._
 import com.typesafe.config.ConfigFactory
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorSystem
-import akka.actor.Props
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, ReceiveTimeout}
 import akka.cluster.Cluster
 import akka.routing.FromConfig
-import akka.actor.ReceiveTimeout
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.model.HttpResponse
+import spray.json.DefaultJsonProtocol
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
+
+import scala.concurrent.duration._
+
+case object GetInfo
+case class Info(completed: Long, n: Int, factorial: BigInt)
 
 //#frontend
 class FactorialFrontend(upToN: Int, repeat: Boolean) extends Actor with ActorLogging {
 
   val backend = context.actorOf(FromConfig.props(),
     name = "factorialBackendRouter")
+
+  var completed = 0L
+
+  implicit val executionContext = context.dispatcher
 
   override def preStart(): Unit = {
     sendJobs()
@@ -27,9 +38,14 @@ class FactorialFrontend(upToN: Int, repeat: Boolean) extends Actor with ActorLog
     case (n: Int, factorial: BigInt) =>
       if (n == upToN) {
         log.info("{}! = {} sender: {}", n, factorial, sender().path)
-        if (repeat) sendJobs()
+        completed  += 1
+        if (repeat)
+          context.system.scheduler.scheduleOnce(500.millis) {
+            sendJobs()
+          }
         else context.stop(self)
       }
+    case GetInfo => sender() ! completed
     case ReceiveTimeout =>
       log.info("Timeout")
       sendJobs()
@@ -42,7 +58,29 @@ class FactorialFrontend(upToN: Int, repeat: Boolean) extends Actor with ActorLog
 }
 //#frontend
 
-object FactorialFrontend {
+object FactorialFrontend extends SprayJsonSupport with DefaultJsonProtocol {
+
+  import akka.http.scaladsl.server.Directives._
+  import akka.pattern.ask
+
+  def routes(system: ActorSystem, frontend: ActorRef, timeout: Timeout) = {
+
+    implicit val executionContext = system.dispatcher
+    implicit val infoFormat = jsonFormat3(Info.apply)
+
+    logRequestResult("akka-http") {
+      path("info") {
+        get {
+          complete {
+            (frontend ? GetInfo)(timeout).mapTo[Long].map {
+              x => HttpResponse(entity = s"$x")
+            }
+          }
+        }
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
 
     val (upToN, repeat) = args.size match {
@@ -54,23 +92,30 @@ object FactorialFrontend {
         System.exit(0)
     }
 
-    val internalIp = NetworkConfig.hostLocalAddress
+    //TODO: those env vars are deprecated
+    val serverHost = "0.0.0.0"//Option(System.getenv("VCAP_APP_HOST")).getOrElse("localhost")
+    val serverPort = Option(System.getenv("PORT")).getOrElse("8080").toInt
+
+    val internalIp = NetworkConfig.hostLocalAddress//NetworkConfig.cloudFoundryIp.orElse(NetworkConfig.serviceInstanceIp).getOrElse("127.0.0.1")
 
     val appConfig = ConfigFactory.load("factorial")
     val clusterName = appConfig.getString("clustering.name")
     val minMembers = appConfig.getNumber("akka.cluster.min-nr-of-members")
 
     val config = ConfigFactory.parseString("akka.cluster.roles = [frontend]").
-      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=$internalIp")).
-      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName)).
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=0.0.0.0")).
+      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName, "127.0.0.1", 2551)).
       withFallback(appConfig)
 
-    val system = ActorSystem(clusterName, config)
+    implicit val system = ActorSystem(clusterName, config)
+    implicit val materializer = ActorMaterializer()
+    implicit val timeout = Timeout(5.seconds)
+    implicit val executor = system.dispatcher
     system.log.info(s"Factorials will start when $minMembers backend members in the cluster.")
     //#registerOnUp
     Cluster(system) registerOnMemberUp {
-      system.actorOf(Props(classOf[FactorialFrontend], upToN, repeat),
-        name = "factorialFrontend")
+      val frontend = system.actorOf(Props(classOf[FactorialFrontend], upToN, repeat), name = "factorialFrontend")
+      Http().bindAndHandle(routes(system, frontend, timeout), serverHost, serverPort)
     }
     //#registerOnUp
 
@@ -82,7 +127,7 @@ object FactorialFrontend {
       // exit the JVM forcefully anyway
       system.scheduler.scheduleOnce(10.seconds)(System.exit(-1))(system.dispatcher)
       // shut down ActorSystem
-      system.shutdown()
+      system.terminate()
     }
     //#registerOnRemoved
 
