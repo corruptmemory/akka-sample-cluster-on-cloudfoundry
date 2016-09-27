@@ -16,11 +16,11 @@ https://www.virtualbox.org/wiki/Downloads
 ```cd bosh-lite```
 ```vagrant up --provider=virtualbox```
 
-### Note: if you encounter ```default: Warning: Authentication failure. Retrying...` that goes on forever, 
+### Note: if you encounter `default: Warning: Authentication failure. Retrying...` that goes on forever, 
 then use the following fix: fix the ssh bug (https://github.com/mitchellh/vagrant/issues/7610) and don't forget to restart the vagrant.
 
 I followed it like this: 
-```vagrant ssh` # (default password: vagrant)
+```vagrant ssh``` # (default password: vagrant)
 
 vagrant@agent-id-bosh-0:~$ ls -la ~/.ssh/authorized_keys
 -rw-rw-r-- 1 vagrant vagrant 389 Sep 21 15:27 /home/vagrant/.ssh/authorized_keys
@@ -32,13 +32,13 @@ vagrant suspend
 vagrant up
 
 ## Login into bosh director
-```bosh target 192.168.50.4 vagrant` # credentials: admin/admin
+```bosh target 192.168.50.4 vagrant``` # credentials: admin/admin
 
 ## Adding routes
 bin/add-route
 
 # Install CF (https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
-```cd ..` # be at the same level as bosh-lite
+```cd ..` # be at the same level as bosh-lite```
 ```git clone https://github.com/cloudfoundry/cf-release```
 ```./bin/provision_cf```
 
@@ -71,7 +71,7 @@ bin/add-route
 ```cf api --skip-ssl-validation https://api.bosh-lite.com```
 
 ## cf login
-```cf login` # credentials: admin/admin
+```cf login``` # credentials: admin/admin
 
 ## Create and target org
 ```cf create-org lightbend```
@@ -128,7 +128,7 @@ bin/add-route
 
 ## set go variables
 ```export GOROOT=/usr/local/opt/go/libexec```
-## not sure it us necessary ```export GOPATH=/Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2```
+## not sure it us necessary `export GOPATH=/Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2`
 
 ```cd diego-release```
 ```git checkout develop```
@@ -142,7 +142,7 @@ bin/add-route
 ### If you get 'the master was dirty', check releases folders: diego, cf, netman and do
 ```git submodule update --init --recursive```
 
-### If you get duplicate releases then you you need to remove ```dev_releases` folder in `netman-release` and call 
+### If you get duplicate releases then you you need to remove `dev_releases` folder in `netman-release` and call 
 ```bosh delete release netman 0.2.0+dev.1` # it maybe 1 or 2 or whatever at the end
 
 #### Optional: CF sample app
@@ -152,7 +152,7 @@ bin/add-route
 ```cf push backend```
 ```cf set-env backend CATS_PORTS "5678,9876"```
 ```cf restage backend```
-```cf access-allow frontend backend --port 9876 --protocol tcp 
+```cf access-allow frontend backend --port 9876 --protocol tcp``` 
 
 # how to install amalgam8 on CF
 https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick
