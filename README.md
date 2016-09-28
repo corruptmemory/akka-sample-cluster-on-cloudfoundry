@@ -14,10 +14,11 @@ https://www.virtualbox.org/wiki/Downloads
 
 ## virtual box create
 ```cd bosh-lite```
+
 ```vagrant up --provider=virtualbox```
 
 ### Note: if you encounter `default: Warning: Authentication failure. Retrying...` that goes on forever, 
-then use the following fix: fix the ssh bug (https://github.com/mitchellh/vagrant/issues/7610) and don't forget to restart the vagrant.
+then use the following fix: [fix the ssh bug](https://github.com/mitchellh/vagrant/issues/7610) and don't forget to restart the vagrant.
 
 I followed it like this: 
 ```vagrant ssh``` # (default password: vagrant)
@@ -38,10 +39,13 @@ vagrant up
 bin/add-route
 
 # Install CF 
-(https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
+
+## Follow the instructions [deploy cloud foundry](https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
 
 ```cd ..``` # be at the same level as bosh-lite
+
 ```git clone https://github.com/cloudfoundry/cf-release```
+
 ```./bin/provision_cf```
 
 ## It will complain about bundler
@@ -52,8 +56,11 @@ bin/add-route
 ## It will complain spiff
 ## spiff should be Darwin for Mac (https://github.com/cloudfoundry-incubator/spiff/releases)
 ```unzip spiff_darwin_amd64.zip```
+
 ```mkdir bin```
+
 ```mv spiff binvi ~/.bash_profile``` # add $pwd/bin to PATH
+
 ```source ~/.bash_profile```
 
 ## Here should be success
@@ -62,11 +69,12 @@ bin/add-route
 # Install CF CLI 
 https://github.com/cloudfoundry/cli#downloads
 ```curl -L "https://cli.run.pivotal.io/stable?release=macosx64-binary&source=github" | tar -zx```
+
 ```mv cf bin/```
 
 
 ### Comment: check if cluster is running properly
-```bosh cck cf-warden
+```bosh cck cf-warden```
 
 # Build / deploy applications
 
@@ -78,6 +86,7 @@ https://github.com/cloudfoundry/cli#downloads
 
 ## Create and target org
 ```cf create-org lightbend```
+
 ```cf target -o lightbend```
 
 ## Create space
@@ -88,7 +97,9 @@ https://github.com/cloudfoundry/cli#downloads
 
 ## deploy non clustered akka app -- Optional
 ```cd akka-sample-cluster```
+
 ```sbt assembly```
+
 ```cf push sample-akka-non-cluster -p target/scala-2.11/akka-sample-cluster-assembly-0.1-SNAPSHOT.jar -b https://github.com/cloudfoundry/java-buildpack.git```
 
 # Network plugin installation
@@ -96,13 +107,16 @@ https://github.com/cloudfoundry/cli#downloads
 ## Install Go
 ```brew install go```
 
-## Set env var for go build and go to network plugin folder -- CHANGE /Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2 to where it really is
-```export GOPATH=/Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2/netman-release```
+## Set env var for go build and go to network plugin folder -- CHANGE $workspace to where it really is
+```export GOPATH=$workspace/netman-release```
+
 ```cd netman-release/src/cli-plugin```
 
 ## Build and install plugin
 ```go build -o /tmp/network-policy-plugin```
+
 ```chmod +x /tmp/network-policy-plugin```
+
 ```cf install-plugin -f /tmp/network-policy-plugin```
 
 ## From bosh-lite folder
@@ -110,16 +124,22 @@ https://github.com/cloudfoundry/cli#downloads
 
 ## From workspace folder
 ```curl -L -o bosh-lite-stemcell-latest.tgz https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent```
+
 ```bosh upload stemcell bosh-lite-stemcell-latest.tgz```
 
 
 ```git clone --recursive https://github.com/cloudfoundry/diego-release```
+
 ```git clone --recursive https://github.com/cloudfoundry/cf-release```
+
 ```git clone --recursive https://github.com/cloudfoundry-incubator/netman-release```
 
 ```git clone --recursive https://github.com/cloudfoundry/garden-runc-release```
+
 ```cd garden-runc-release```
+
 ```git checkout develop```
+
 ```git submodule update --init --recursive```
 
 ```bosh target vagrant && bosh create release && bosh upload release```
@@ -131,14 +151,17 @@ https://github.com/cloudfoundry/cli#downloads
 
 ## set go variables
 ```export GOROOT=/usr/local/opt/go/libexec```
-## not sure it us necessary `export GOPATH=/Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2`
 
+## not sure it us necessary `export GOPATH=/Users/admin/projects/akka-sample-cluster-on-cloudfoundry-2`
 ```cd diego-release```
+
 ```git checkout develop```
+
 ```git submodule update --init --recursive```
 
 ##  Deploy
 ```cd netman-release```
+
 ```./scripts/deploy-to-bosh-lite```
 
 ## Notes:
@@ -146,28 +169,40 @@ https://github.com/cloudfoundry/cli#downloads
 ```git submodule update --init --recursive```
 
 ### If you get duplicate releases then you you need to remove `dev_releases` folder in `netman-release` and call 
-```bosh delete release netman 0.2.0+dev.1` # it maybe 1 or 2 or whatever at the end
+```bosh delete release netman 0.2.0+dev.1``` # it maybe 1 or 2 or whatever at the end
 
 #### Optional: CF sample app
 ```cd netman-release/src/example-apps/cats-and-dogs/frontend```
+
 ```cf push frontend```
+
 ```cd netman-release/src/example-apps/cats-and-dogs/backend```
+
 ```cf push backend```
+
 ```cf set-env backend CATS_PORTS "5678,9876"```
+
 ```cf restage backend```
+
 ```cf access-allow frontend backend --port 9876 --protocol tcp``` 
 
-# how to install amalgam8 on CF
-https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick
+# For how to install amalgam8 on CF follow the instructions for amalgam8 [here](https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick)
 
 #cluster
 ```cd akka-sample-cluster```
+
 ```sbt backend:assembly```
+
 ```cf push --no-route target/scala-2.11/sample-akka-cluster-backend -p akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git```
+
 ```cf set-health-check sample-akka-cluster-backend none```
+
 ```cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp```
+
 ```cf scale sample-akka-cluster-backend -i 2```
 
 ```sbt frontend:assembly```
+
 ```cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.jar -b https://github.com/cloudfoundry/java-buildpack.git```
+
 ```cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp```
