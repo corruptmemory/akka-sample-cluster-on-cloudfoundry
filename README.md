@@ -6,8 +6,8 @@ This repo contains sample Akka Cluster app along with instructions how to deploy
 * (Optional) Deploy Standalone (non cluster) Akka app
 * Install networking plugin https://github.com/cloudfoundry-incubator/netman-release
 * (Optional) Deploy 'Cats and Dogs' sample app to verify the installation and learn how to enable inter-container communication: https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs
-* Deploy Service Registry software - instructions are at https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick
-* Deploy akka-sample-cluster app, see instruction [below](#Deploy-Akka-Cluster)
+* Deploy Service Registry software amalgam8 - instructions are at https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick
+* Deploy akka-sample-cluster app, see instruction [below](#deploy-akka-cluster)
 
 ## Note: the rest of README are instructions from links above as I executed them along with potential gotchas that I've encountered. I'd advise to follow the official links and read the instructions below to compare if needed.
 
