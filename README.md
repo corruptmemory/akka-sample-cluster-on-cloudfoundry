@@ -23,11 +23,11 @@ then use the following fix: [fix the ssh bug](https://github.com/mitchellh/vagra
 I followed it like this: 
 ```vagrant ssh``` # (default password: vagrant)
 
-vagrant@agent-id-bosh-0:~$ ls -la ~/.ssh/authorized_keys
+```vagrant@agent-id-bosh-0:~$ ls -la ~/.ssh/authorized_keys
 -rw-rw-r-- 1 vagrant vagrant 389 Sep 21 15:27 /home/vagrant/.ssh/authorized_keys
 vagrant@agent-id-bosh-0:~$ chmod 0600 /home/vagrant/.ssh/authorized_keys
 vagrant@agent-id-bosh-0:~$ ls -la ~/.ssh/authorized_keys
--rw------- 1 vagrant vagrant 389 Sep 21 15:27 /home/vagrant/.ssh/authorized_keys
+-rw------- 1 vagrant vagrant 389 Sep 21 15:27 /home/vagrant/.ssh/authorized_keys```
 
 vagrant suspend
 vagrant up
@@ -42,35 +42,28 @@ bin/add-route
 
 ## Follow the instructions [deploy cloud foundry](https://github.com/cloudfoundry/bosh-lite/blob/master/README.md#deploy-cloud-foundry)
 
-```cd ..``` # be at the same level as bosh-lite
-
-```git clone https://github.com/cloudfoundry/cf-release```
-
-```./bin/provision_cf```
+```cd .. # be at the same level as bosh-lite
+git clone https://github.com/cloudfoundry/cf-release
+./bin/provision_cf```
 
 ## It will complain about bundler
-```gem install bundler```
-
-```./bin/provision_cf```
+```gem install bundler
+./bin/provision_cf```
 
 ## It will complain spiff
-## spiff should be Darwin for Mac (https://github.com/cloudfoundry-incubator/spiff/releases)
-```unzip spiff_darwin_amd64.zip```
-
-```mkdir bin```
-
-```mv spiff binvi ~/.bash_profile``` # add $pwd/bin to PATH
-
-```source ~/.bash_profile```
+For Mac install Darwin [here](https://github.com/cloudfoundry-incubator/spiff/releases)
+```unzip spiff_darwin_amd64.zip
+mkdir bin
+mv spiff binvi ~/.bash_profile # add $pwd/bin to PATH
+source ~/.bash_profile```
 
 ## Here should be success
 ```./bin/provision_cf```
 
 # Install CF CLI 
 https://github.com/cloudfoundry/cli#downloads
-```curl -L "https://cli.run.pivotal.io/stable?release=macosx64-binary&source=github" | tar -zx```
-
-```mv cf bin/```
+```curl -L "https://cli.run.pivotal.io/stable?release=macosx64-binary&source=github" | tar -zx
+mv cf bin/```
 
 
 ### Comment: check if cluster is running properly
@@ -85,9 +78,8 @@ https://github.com/cloudfoundry/cli#downloads
 ```cf login``` # credentials: admin/admin
 
 ## Create and target org
-```cf create-org lightbend```
-
-```cf target -o lightbend```
+```cf create-org lightbend
+cf target -o lightbend```
 
 ## Create space
 ```cf create-space development```
@@ -97,10 +89,8 @@ https://github.com/cloudfoundry/cli#downloads
 
 ## deploy non clustered akka app -- Optional
 ```cd akka-sample-cluster```
-
-```sbt assembly```
-
-```cf push sample-akka-non-cluster -p target/scala-2.11/akka-sample-cluster-assembly-0.1-SNAPSHOT.jar -b https://github.com/cloudfoundry/java-buildpack.git```
+sbt assembly
+cf push sample-akka-non-cluster -p target/scala-2.11/akka-sample-cluster-assembly-0.1-SNAPSHOT.jar -b https://github.com/cloudfoundry/java-buildpack.git```
 
 # Network plugin installation
 
@@ -188,21 +178,17 @@ https://github.com/cloudfoundry/cli#downloads
 
 # For how to install amalgam8 on CF follow the instructions for amalgam8 [here](https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick)
 
-#cluster
-```cd akka-sample-cluster```
+# Akka Cluster
 
-```sbt backend:assembly```
+## Deploy backend as service with no routes and health checks, allow backend talk one to each other
+```cd akka-sample-cluster
+sbt backend:assembly
+cf push --no-route target/scala-2.11/sample-akka-cluster-backend -p akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git
+cf set-health-check sample-akka-cluster-backend none
+cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp
+cf scale sample-akka-cluster-backend -i 2 # wait with this command till first seed nodes registers with amalgam8```
 
-```cf push --no-route target/scala-2.11/sample-akka-cluster-backend -p akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git```
-
-```cf set-health-check sample-akka-cluster-backend none```
-
-```cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp```
-
-```cf scale sample-akka-cluster-backend -i 2```
-
-```sbt frontend:assembly```
-
-```cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.jar -b https://github.com/cloudfoundry/java-buildpack.git```
-
-```cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp```
+## Deploy frontend
+```sbt frontend:assembly
+cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.jar -b https://github.com/cloudfoundry/java-buildpack.git
+cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp```
