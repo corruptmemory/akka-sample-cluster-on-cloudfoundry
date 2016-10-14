@@ -1,3 +1,16 @@
+This repo contains sample Akka Cluster app along with instructions how to deploy it to CloudFoundry.
+
+# Game plan:
+
+* Install bosh-lite locally https://github.com/cloudfoundry/bosh-lite
+* (Optional) Deploy Standalone (non cluster) Akka app
+* Install networking plugin https://github.com/cloudfoundry-incubator/netman-release
+* (Optional) Deploy 'Cats and Dogs' sample app to verify the installation and learn how to enable inter-container communication: https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs
+* Deploy Service Registry software amalgam8 - instructions are at https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick
+* Deploy akka-sample-cluster app, see instruction [below](#deploy-akka-cluster)
+
+## Note: the rest of README are instructions from links above as I executed them along with potential gotchas that I've encountered. I'd advise to follow the official links and read the instructions below to compare if needed.
+
 # Install bosh cli
 ```
 gem install bosh_cli --no-ri --no-rdoc
@@ -223,7 +236,7 @@ cf access-allow frontend backend --port 9876 --protocol tcp
 
 ## For how to install amalgam8 on CF follow the instructions for amalgam8 [here](https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick)
 
-# Akka Cluster
+# Deploy Akka Cluster
 
 ## Deploy backend as service with no routes and health checks, allow backend talk one to each other
 ```
