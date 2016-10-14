@@ -23,7 +23,13 @@ vagrant up --provider=virtualbox
 ```
 
 ### Note: if you encounter `default: Warning: Authentication failure. Retrying...` that goes on forever, 
-then use the following fix: [fix the ssh bug](https://github.com/mitchellh/vagrant/issues/7610) and don't forget to restart the vagrant.
+then use the following fix: 
+
+```
+When I log onto the VM manually, I noticed the updated authorized_keys file permission that vagrant installed is incorrect. When I 'chmod 0600 ~/.ssh/authorized_keys' that file, it then starts to work.
+```
+
+[More info](https://github.com/mitchellh/vagrant/issues/7610) and don't forget to restart the vagrant.
 
 I followed it like this: 
 ```
@@ -65,7 +71,7 @@ gem install bundler
 ./bin/provision_cf
 ```
 
-## It will complain spiff
+## It will complain about spiff
 For Mac install Darwin [here](https://github.com/cloudfoundry-incubator/spiff/releases)
 ```
 unzip spiff_darwin_amd64.zip
@@ -105,7 +111,7 @@ cf login # credentials: admin/admin
 
 ## Create and target org
 ```
-cf create-org lightbend
+cf create -org lightbend
 cf target -o lightbend
 ```
 
@@ -223,8 +229,7 @@ cf access-allow frontend backend --port 9876 --protocol tcp
 ```
 cd akka-sample-cluster
 sbt backend:assembly
-cf push --no-route target/scala-2.11/sample-akka-cluster-backend -p akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git
-cf set-health-check sample-akka-cluster-backend none
+cf push --no-route --health-check-type sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git
 cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp
 ```
 
@@ -236,3 +241,13 @@ sbt frontend:assembly
 cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.jar -b https://github.com/cloudfoundry/java-buildpack.git
 cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp
 ```
+
+## If ever need to come back and start bosh-lite again:
+```
+vagrant halt
+vagrant up
+bosh target 192.168.50.4 lite
+```
+
+## Accessing bosh-lite:
+	- listing apps: `cf apps`
