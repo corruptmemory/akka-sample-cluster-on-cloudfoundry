@@ -255,12 +255,4 @@ cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.j
 cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp
 ```
 
-## If ever need to come back and start bosh-lite again:
-```
-vagrant halt
-vagrant up
-bosh target 192.168.50.4 lite
-```
-
-## Accessing bosh-lite:
-	- listing apps: `cf apps`
+## Don't forget to `vagrant suspend` before you're leaving otherwise you'll have to recreate VMs
