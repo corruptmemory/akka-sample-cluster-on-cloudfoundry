@@ -246,7 +246,7 @@ cf push --no-route --health-check-type sample-akka-cluster-backend -p target/sca
 cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp
 ```
 
-### Note: `cf scale sample-akka-cluster-backend -i 2` will scale the backend to 2 instances but you need to wait with this command till first seed nodes registers with amalgam8, otherwise you might get split clusters.
+### Note: `cf scale sample-akka-cluster-backend -i 2` will scale the backend to 2 instances but you need to wait with this command till first seed node registers with amalgam8, otherwise you might get split clusters.
 
 ## Deploy frontend
 ```
