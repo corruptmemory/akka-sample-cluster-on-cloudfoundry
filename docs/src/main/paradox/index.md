@@ -49,7 +49,7 @@ cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 
 ```
 - Verify that it works:
 ```
-curl GET sample-akka-cluster-frontend.bosh-lite.com/info #it should show the number of completed jobs
+curl sample-akka-cluster-frontend.bosh-lite.com/info #it should show the number of completed jobs
 ```
 
 ## Summary
