@@ -37,19 +37,24 @@ object FactorialBackend {
 
     val port = if (args.isEmpty) 2551 else args(0).toInt
 
-    val internalIp = NetworkConfig.hostLocalAddress//NetworkConfig.cloudFoundryIp.orElse(NetworkConfig.serviceInstanceIp).getOrElse("127.0.0.1")
-
-    println(s"internalIp:$internalIp")
-    println(s"hostLocalAddress:${NetworkConfig.hostLocalAddress}")
-
     val appConfig = ConfigFactory.load("factorial")
     val clusterName = appConfig.getString("clustering.name")
+
+    val registryService = if(args.size == 2 && args(1) == "local")
+      appConfig.getString("clustering.registry-service.local") else
+      appConfig.getString("clustering.registry-service.bosh")
+
+    val registryServiceTimeout = appConfig.getInt("clustering.registry-service.timeout")
+
+    val networkConfig = new NetworkConfig(registryService, registryServiceTimeout)
+
+    val internalIp = networkConfig.hostLocalAddress
 
     val config = ConfigFactory.parseString("akka.cluster.roles = [backend]").
       withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.hostname=$internalIp")).
       withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port")).
       withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.bind-hostname=0.0.0.0")).
-      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName, internalIp, port)).
+      withFallback(networkConfig.seedsConfig(appConfig, clusterName, internalIp, port)).
       withFallback(appConfig)
 
     val system = ActorSystem(clusterName, config)
@@ -58,12 +63,11 @@ object FactorialBackend {
     import scala.concurrent.duration._
 
     def sendHeartbeat(id: String): Unit = system.scheduler.scheduleOnce(25.seconds) {
-      NetworkConfig.heartbeat(id).map(_ => sendHeartbeat(id))
+      networkConfig.heartbeat(id).onComplete(_ => sendHeartbeat(id))
     }
 
-    NetworkConfig.registerService(internalIp, port).map(id => {
+    networkConfig.registerService(internalIp, port).map(id => {
       system.actorOf(Props[FactorialBackend], name = "factorialBackend")
-      //system.actorOf(Props[MetricsListener], name = "metricsListener")
       sendHeartbeat(id)
     })
   }

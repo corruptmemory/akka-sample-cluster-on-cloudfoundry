@@ -83,28 +83,37 @@ object FactorialFrontend extends SprayJsonSupport with DefaultJsonProtocol {
 
   def main(args: Array[String]): Unit = {
 
-    val (upToN, repeat) = args.size match {
-      case 0 => (10, true)
-      case 1 => (args(0).toInt, true)
-      case 2 => (args(0).toInt, args(1) == "true")
+    val (upToN, repeat: Boolean, isLocal: Boolean) = args.size match {
+      case 0 => (10, true, false)
+      case 1 => (args(0).toInt, true, false)
+      case 2 => (args(0).toInt, args(1) == "true", false)
+      case 3 => (args(0).toInt, args(1) == "true", args(2) == "local")
       case x =>
         println("Format: ...FactorialFrontend 'upToN' 'repeat'")
         System.exit(0)
     }
 
-    //TODO: those env vars are deprecated
-    val serverHost = "0.0.0.0"//Option(System.getenv("VCAP_APP_HOST")).getOrElse("localhost")
+    val serverHost = "0.0.0.0"
     val serverPort = Option(System.getenv("PORT")).getOrElse("8080").toInt
-
-    val internalIp = NetworkConfig.hostLocalAddress//NetworkConfig.cloudFoundryIp.orElse(NetworkConfig.serviceInstanceIp).getOrElse("127.0.0.1")
 
     val appConfig = ConfigFactory.load("factorial")
     val clusterName = appConfig.getString("clustering.name")
     val minMembers = appConfig.getNumber("akka.cluster.min-nr-of-members")
 
+    val registryService = if(isLocal)
+      appConfig.getString("clustering.registry-service.local") else
+      appConfig.getString("clustering.registry-service.bosh")
+
+    val registryServiceTimeout = appConfig.getInt("clustering.registry-service.timeout")
+
+    val networkConfig = new NetworkConfig(registryService, registryServiceTimeout)
+
+    val internalIp = networkConfig.hostLocalAddress
+
     val config = ConfigFactory.parseString("akka.cluster.roles = [frontend]").
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.hostname=$internalIp")).
       withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=0.0.0.0")).
-      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName, "127.0.0.1", 2551)).
+      withFallback(networkConfig.seedsConfig(appConfig, clusterName, "127.0.0.1", 2551)).
       withFallback(appConfig)
 
     implicit val system = ActorSystem(clusterName, config)
