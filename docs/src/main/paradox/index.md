@@ -31,8 +31,8 @@ cd akka-sample-cluster
 sbt backend:assembly # backend
 sbt frontend:assembly # frontend
 ```
-- Install amalgam8: amalgam8 installation along with a sample application can be found [here](https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick).
-- Install sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
+- Deploy amalgam8: amalgam8 installation along with a sample application can be found [here](https://github.com/cloudfoundry-incubator/netman-release/tree/develop/src/example-apps/tick).
+- Deploy sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
 ```
 cf push --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b https://github.com/cloudfoundry/java-buildpack.git
 cf access-allow sample-akka-cluster-backend sample-akka-cluster-backend --port 2551 --protocol tcp
@@ -42,7 +42,7 @@ cf scale sample-akka-cluster-backend -i 2 # needed since our sample application 
 
 **Note:** to prevent cluster split, verify that the first node is running before scaling it. 
 
-- Install sample Akka frontend:
+- Deploy sample Akka frontend:
 ```
 cf push sample-akka-cluster-frontend -p target/scala-2.11/akka-sample-frontend.jar -b https://github.com/cloudfoundry/java-buildpack.git
 cf access-allow sample-akka-cluster-frontend sample-akka-cluster-backend --port 2551 --protocol tcp
