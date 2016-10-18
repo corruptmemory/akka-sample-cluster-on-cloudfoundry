@@ -54,7 +54,7 @@ curl GET sample-akka-cluster-frontend.bosh-lite.com/info #it should show the num
 
 ## Summary
 
-This article shows a prototype implementation and it requires more than that to have a production Akka Cluster on Cloud Foundry, but it is a successful proof-of-concept that demonstrates Akka Cluster working with the latest Cloud Foundry release and the new experimental network plugin.
+This guide shows a prototype implementation so it requires more than that to have a production Akka Cluster on Cloud Foundry, however it is a successful proof-of-concept that demonstrates Akka Cluster working with the latest Cloud Foundry release and the new experimental network plugin.
 
 
 
